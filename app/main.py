@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Union
 from fastapi import HTTPException, status
 from app.models import Base
+from app.db import engine
+from app.models import Base
 
 
 
@@ -23,8 +25,14 @@ async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession
 app = FastAPI()
 
 @app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
+async def on_startup():
+    # Create tables if they don't exist
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+@app.get("/")
+async def root():
+    return {"message": "API is running"}
 
 # Allow CORS for browser requests
 app.add_middleware(

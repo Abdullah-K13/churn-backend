@@ -9,6 +9,8 @@ from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Union
 from fastapi import HTTPException, status
+from app.models import Base
+
 
 
 from app import models, schemas
@@ -20,6 +22,9 @@ async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession
 
 app = FastAPI()
 
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
 
 # Allow CORS for browser requests
 app.add_middleware(
